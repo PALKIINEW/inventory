@@ -1,0 +1,31 @@
+body { font-family: Arial, sans-serif; margin: 20px; }
+table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+th { background-color: #f2f2f2; }
+input, select, button { padding: 6px; margin: 4px; }
+.controls { margin-bottom: 10px; }
+.add-form { border: 1px solid #ccc; padding: 10px; margin-bottom: 20px; }
+.add-form input { margin-right: 10px; }
+
+/* Highlights */
+.out-stock { background-color: #f8d7da; }  /* red */
+.low-stock { background-color: #fff3cd; }  /* yellow */
+.expiring-soon { background-color: #ffe5b4; } /* light orange */
+.expired { background-color: #f5c6cb; }
+
+th {
+    background-color: #f2f2f2;
+    cursor: pointer; /* shows hand icon */
+    user-select: none;
+    position: relative;
+}
+
+th.sorted-asc::after {
+    content: " ▲";
+    font-size: 0.7em;
+}
+
+th.sorted-desc::after {
+    content: " ▼";
+    font-size: 0.7em;
+}

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Upload Product Images</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 600px; margin: auto; }
+        input, button { margin: 10px 0; padding: 6px; width: 100%; }
+        img { max-width: 200px; display: block; margin-top: 10px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Upload Product Image</h1>
+
+    <select id="productSelect"></select>
+    <input type="file" id="imageFile">
+    <button onclick="uploadImage()">Upload</button>
+
+    <h3>Preview</h3>
+    <img id="preview" src="" alt="No image selected">
+
+    <div id="message"></div>
+</div>
+
+<script>
+    const API = "/api/products";
+    const select = document.getElementById("productSelect");
+    const preview = document.getElementById("preview");
+    const fileInput = document.getElementById("imageFile");
+    const messageDiv = document.getElementById("message");
+
+    // Load products in dropdown
+    async function loadProducts() {
+        const res = await fetch(API);
+        const products = await res.json();
+        products.forEach(p => {
+            const option = document.createElement("option");
+            option.value = p.id;
+            option.textContent = p.name;
+            select.appendChild(option);
+        });
+    }
+
+    fileInput.addEventListener("change", () => {
+        const file = fileInput.files[0];
+        if(file) {
+            preview.src = URL.createObjectURL(file);
+        } else {
+            preview.src = "";
+        }
+    });
+
+    async function uploadImage() {
+        const productId = select.value;
+        if(!productId) {
+            alert("Select a product!");
+            return;
+        }
+
+        const file = fileInput.files[0];
+        if(!file) {
+            alert("Select an image!");
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("image", file);
+
+        const res = await fetch(`${API}/${productId}/image`, {
+            method: "POST",
+            body: formData
+        });
+
+        if(res.ok) {
+            messageDiv.textContent = "Image uploaded successfully!";
+            fileInput.value = "";
+            preview.src = "";
+        } else {
+            messageDiv.textContent = "Failed to upload image.";
+        }
+    }
+
+    loadProducts();
+</script>
+</body>
+</html>
