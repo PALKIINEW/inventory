@@ -6,9 +6,6 @@ import com.store.inventory.export.WordService;
 import com.store.inventory.model.Product;
 import com.store.inventory.service.ProductService;
 import jakarta.validation.Valid;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -43,7 +40,7 @@ public class ProductController {
     public ResponseEntity<?> create(@Valid @RequestBody Product p) {
 
         // ================================
-        // ✅ NEW: SKU duplicate protection
+        // ✅ SKU duplicate protection
         // ================================
         if (p.getSku() != null && service.existsBySku(p.getSku())) {
             Map<String, String> error = new HashMap<>();
@@ -58,7 +55,10 @@ public class ProductController {
 
     @GetMapping
     public ResponseEntity<List<Product>> all() {
-        return ResponseEntity.ok(service.all());
+        // Return newest first by default
+        List<Product> products = service.all();
+        products.sort((a, b) -> b.getId().compareTo(a.getId())); // newest first
+        return ResponseEntity.ok(products);
     }
 
     @GetMapping("/{id}")
@@ -119,7 +119,10 @@ public class ProductController {
             results = service.all();
         }
 
-        if (sort != null && !sort.isBlank()) {
+        // Default: newest first
+        if (sort == null || sort.isBlank() || "newest".equals(sort)) {
+            results.sort((a, b) -> b.getId().compareTo(a.getId())); // newest first
+        } else {
             results = service.sortProducts(results, sort);
         }
 
@@ -155,7 +158,6 @@ public class ProductController {
     // ===========================
     @GetMapping("/export/excel")
     public ResponseEntity<byte[]> exportExcel() throws Exception {
-        // Pass page = 0 and pageSize = 1000 (or whatever you want to export)
         byte[] bytes = excelService.productsToExcel(service.all(), 0, 1000);
         String filename = "products.xlsx";
 
@@ -167,12 +169,13 @@ public class ProductController {
                         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
                 .body(bytes);
     }
+
     // ===========================
     // EXPORT PDF
     // ===========================
     @GetMapping("/export/pdf")
     public ResponseEntity<byte[]> exportPdf() throws Exception {
-        byte[] bytes = pdfService.productsToPdf(service.all(), 0, 1000); // pass page=0, size=1000
+        byte[] bytes = pdfService.productsToPdf(service.all(), 0, 1000);
         String filename = "products.pdf";
 
         return ResponseEntity.ok()
@@ -196,5 +199,4 @@ public class ProductController {
                         "application/vnd.openxmlformats-officedocument.wordprocessingml.document"))
                 .body(bytes);
     }
-
 }

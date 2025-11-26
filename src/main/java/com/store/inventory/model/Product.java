@@ -3,6 +3,9 @@ package com.store.inventory.model;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import com.store.inventory.model.Category;
+import com.store.inventory.model.Brand;
+
 import java.time.LocalDate;
 
 @Document(collection = "products")
@@ -19,10 +22,14 @@ public class Product {
     private boolean available;
     private String barcodeImage;
 
+    private Category category;
+    private Brand brand;
+
     public Product() {}
 
     public Product(String id, String name, String sku, double buyingPrice, double sellingPrice,
-                   int quantity, LocalDate expirationDate, boolean available) {
+                   int quantity, LocalDate expirationDate, boolean available,
+                   Category category, Brand brand) {
         this.id = id;
         this.name = name;
         this.sku = sku;
@@ -31,10 +38,11 @@ public class Product {
         this.quantity = quantity;
         this.expirationDate = expirationDate;
         this.available = available;
+        this.category = category;
+        this.brand = brand;
     }
 
     // ===== Getters and Setters =====
-
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
 
@@ -61,6 +69,12 @@ public class Product {
 
     public String getBarcodeImage() { return barcodeImage; }
     public void setBarcodeImage(String barcodeImage) { this.barcodeImage = barcodeImage; }
+
+    public Category getCategory() { return category; }
+    public void setCategory(Category category) { this.category = category; }
+
+    public Brand getBrand() { return brand; }
+    public void setBrand(Brand brand) { this.brand = brand; }
 
     // convenience
     public void updateAvailability() {
