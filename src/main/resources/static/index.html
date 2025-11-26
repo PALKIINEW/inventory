@@ -117,6 +117,7 @@
     let totalPages = 1;
     const pageSize = 10;
 
+    // Fetch and display products
     async function search(page = 0, size = pageSize) {
         const name = document.getElementById('searchName').value;
         const available = document.getElementById('searchAvailability').value;
@@ -127,7 +128,6 @@
         if(name) url += `&name=${encodeURIComponent(name)}`;
         if(available) url += `&available=${available}`;
         if(expirationFilter) url += `&expirationFilter=${expirationFilter}`;
-        if(!sortOption) sortOption = 'newest';
         if(sortOption && sortOption !== 'newest') url += `&sort=${sortOption}`;
 
         const res = await fetch(url);
@@ -139,7 +139,7 @@
             products = data.products; totalPages = data.totalPages; currentPage = data.currentPage;
         }
 
-        if(sortOption === 'newest'){
+        if(!sortOption || sortOption === 'newest'){
             products.sort((a,b)=>{
                 if(a.createdAt && b.createdAt) return new Date(b.createdAt) - new Date(a.createdAt);
                 return b.id.localeCompare(a.id);
@@ -158,6 +158,8 @@
         products.forEach((p, idx)=>{
             const tr = document.createElement("tr");
             tr.setAttribute("data-id", p.id);
+            tr.setAttribute("data-category", p.category ? (typeof p.category === 'string' ? p.category : p.category.name) : "");
+            tr.setAttribute("data-brand", p.brand ? (typeof p.brand === 'string' ? p.brand : p.brand.name) : "");
 
             if(!p.available) tr.classList.add("out-stock");
             else if(p.quantity <= 5) tr.classList.add("low-stock");
@@ -174,8 +176,8 @@
             <td>${sn}</td>
             <td>${p.image ? `<img src="${p.image}" class="product-image">` : ""}</td>
             <td>${p.name}</td>
-            <td>${p.category ? (p.category.name || p.category) : ""}</td>
-            <td>${p.brand ? (p.brand.name || p.brand) : ""}</td>
+            <td>${tr.dataset.category}</td>
+            <td>${tr.dataset.brand}</td>
             <td>${p.sku || ""}</td>
             <td>${p.buyingPrice.toFixed(2)}</td>
             <td>${p.sellingPrice.toFixed(2)}</td>
@@ -257,8 +259,8 @@
         const row = [...document.getElementById('productTableBody').children].find(r=>r.dataset.id===id);
         if(!row) return;
         document.getElementById('addName').value = row.cells[2].innerText;
-        document.getElementById('addCategory').value = row.cells[3].innerText;
-        document.getElementById('addBrand').value = row.cells[4].innerText;
+        document.getElementById('addCategory').value = row.dataset.category;
+        document.getElementById('addBrand').value = row.dataset.brand;
         document.getElementById('addSku').value = row.cells[5].innerText;
         document.getElementById('addBuyingPrice').value = row.cells[6].innerText;
         document.getElementById('addSellingPrice').value = row.cells[7].innerText;

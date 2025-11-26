@@ -55,6 +55,8 @@ public class ProductService {
             p.setSellingPrice(incoming.getSellingPrice());
             p.setQuantity(incoming.getQuantity());
             p.setExpirationDate(incoming.getExpirationDate());
+            p.setCategory(incoming.getCategory()); // <--- add this
+            p.setBrand(incoming.getBrand());       // <--- add this
             p.updateAvailability();
 
             // Regenerate barcode if SKU updated
@@ -66,6 +68,7 @@ public class ProductService {
             return repo.save(p);
         }).orElse(null);
     }
+
 
     public Product adjustQuantity(String id, int delta) {
         return repo.findById(id).map(p -> {
