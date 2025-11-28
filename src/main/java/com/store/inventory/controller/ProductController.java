@@ -38,10 +38,6 @@ public class ProductController {
 
     @PostMapping
     public ResponseEntity<?> create(@Valid @RequestBody Product p) {
-
-        // ================================
-        // ✅ SKU duplicate protection
-        // ================================
         if (p.getSku() != null && service.existsBySku(p.getSku())) {
             Map<String, String> error = new HashMap<>();
             error.put("message", "SKU already exists");
@@ -55,9 +51,8 @@ public class ProductController {
 
     @GetMapping
     public ResponseEntity<List<Product>> all() {
-        // Return newest first by default
         List<Product> products = service.all();
-        products.sort((a, b) -> b.getId().compareTo(a.getId())); // newest first
+        products.sort((a, b) -> b.getId().compareTo(a.getId()));
         return ResponseEntity.ok(products);
     }
 
@@ -94,7 +89,7 @@ public class ProductController {
     }
 
     // ===========================
-    // SEARCH + SORT ENDPOINT
+    // SEARCH + SORT ENDPOINT (FIXED)
     // ===========================
     @GetMapping("/search")
     public ResponseEntity<Map<String, Object>> search(
@@ -104,7 +99,7 @@ public class ProductController {
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate expiresBefore,
             @RequestParam(required = false) String sort,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "-1") int size, // <- return all if -1
             @RequestParam(required = false) String expirationFilter
     ) {
         List<Product> results;
@@ -119,9 +114,8 @@ public class ProductController {
             results = service.all();
         }
 
-        // Default: newest first
         if (sort == null || sort.isBlank() || "newest".equals(sort)) {
-            results.sort((a, b) -> b.getId().compareTo(a.getId())); // newest first
+            results.sort((a, b) -> b.getId().compareTo(a.getId()));
         } else {
             results = service.sortProducts(results, sort);
         }
@@ -139,16 +133,25 @@ public class ProductController {
                     .toList();
         }
 
-        int start = Math.min(page * size, results.size());
-        int end = Math.min(start + size, results.size());
-        List<Product> paged = results.subList(start, end);
+        int totalItems = results.size();
+        int totalPages = 1;
+        List<Product> paged;
+
+        if (size <= 0) {
+            paged = results; // return all products
+        } else {
+            int start = Math.min(page * size, results.size());
+            int end = Math.min(start + size, results.size());
+            paged = results.subList(start, end);
+            totalPages = (int) Math.ceil((double) results.size() / size);
+        }
 
         Map<String, Object> response = new HashMap<>();
         response.put("products", paged);
         response.put("currentPage", page);
         response.put("pageSize", size);
-        response.put("totalItems", results.size());
-        response.put("totalPages", (int) Math.ceil((double) results.size() / size));
+        response.put("totalItems", totalItems);
+        response.put("totalPages", totalPages);
 
         return ResponseEntity.ok(response);
     }
@@ -186,6 +189,9 @@ public class ProductController {
                 .body(bytes);
     }
 
+    // ===========================
+    // EXPORT WORD
+    // ===========================
     @GetMapping("/export/word")
     public ResponseEntity<byte[]> exportWord() throws Exception {
         byte[] bytes = wordService.productsToWord(service.all(), 0, 1000);
